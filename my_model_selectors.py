@@ -66,6 +66,11 @@ class SelectorBIC(ModelSelector):
 
     http://www2.imm.dtu.dk/courses/02433/doc/ch6_slides.pdf
     Bayesian information criteria: BIC = -2 * logL + p * logN
+    where   L is the likelihood
+            p is the number of free parameters in the HMM
+                transition parameters: states - 1 (we never transition out of the last state)
+                output parameters: 2 * states * features (each gaussian has a mean and a variance)
+            N is the number of frames (in all sequences)
     """
 
     def select(self):
