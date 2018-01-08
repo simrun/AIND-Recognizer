@@ -28,6 +28,9 @@ class ModelSelector(object):
         self.random_state = random_state
         self.verbose = verbose
 
+        self.features = len(self.sequences[0][0])
+        self.datapoints = len(self.sequences[0])
+
     def select(self):
         raise NotImplementedError
 
@@ -81,8 +84,23 @@ class SelectorBIC(ModelSelector):
         """
         warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-        # TODO implement model selection based on BIC scores
-        raise NotImplementedError
+        candidates = {np.inf: None}
+        for n in range(self.min_n_components, self.max_n_components + 1):
+            model = self.base_model(n)
+            if model == None:
+                continue
+
+            try:
+                logL = model.score(self.X, self.lengths)
+            except:
+                continue
+            p = n - 1 + 2*n*self.features
+            logN = np.log(self.datapoints)
+            bic = -2*logL + p*logN
+
+            candidates[bic] = model
+
+        return candidates[min(candidates)]
 
 
 class SelectorDIC(ModelSelector):
