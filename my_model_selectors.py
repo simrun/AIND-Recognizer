@@ -146,5 +146,33 @@ class SelectorCV(ModelSelector):
     def select(self):
         warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-        # TODO implement model selection using CV
-        raise NotImplementedError
+        kf = KFold(n_splits=min(3, len(self.sequences)))
+        folds = list(kf.split(self.sequences))
+
+        scores = {}
+        for n in range(self.min_n_components, self.max_n_components + 1):
+            fold_scores = []
+            for train_idx, test_idx in folds:
+                train_Xlengths = combine_sequences(train_idx, self.sequences)
+                test_Xlengths = combine_sequences(test_idx, self.sequences)
+
+                try:
+                    model = GaussianHMM(n_components=n, covariance_type="diag", n_iter=1000,
+                                            random_state=self.random_state, verbose=False).fit(*train_Xlengths)
+                    fold_scores.append(model.score(*test_Xlengths))
+                except:
+                    continue
+
+            if not fold_scores:
+                continue
+            else:
+                avg_fold_score = sum(fold_scores)/len(fold_scores)
+                scores[avg_fold_score] = n
+
+        try:
+            n = scores[max(scores)]
+            model = GaussianHMM(n_components=n, covariance_type="diag", n_iter=1000,
+                                random_state=self.random_state, verbose=False).fit(self.X, self.lengths)
+        except:
+            return None
+        return model
