@@ -146,8 +146,11 @@ class SelectorCV(ModelSelector):
     def select(self):
         warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-        kf = KFold(n_splits=min(3, len(self.sequences)))
-        folds = list(kf.split(self.sequences))
+        kf = KFold()
+        try:
+            folds = list(kf.split(self.sequences))
+        except:
+            return None
 
         scores = {}
         for n in range(self.min_n_components, self.max_n_components + 1):
